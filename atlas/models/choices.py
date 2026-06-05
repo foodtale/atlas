@@ -1,0 +1,28 @@
+from django.db import models
+
+
+class UserRoleChoice(models.TextChoices):
+    CUSTOMER = ("customer", "Customer")
+    STAFF = ("staff", "Staff")
+
+
+class UserOAuthProviderChoice(models.TextChoices):
+    GOOGLE = ("google", "Google")
+    APPLE = ("apple", "Apple")
+
+
+class OTPPurpose(models.TextChoices):
+    LOGIN = ("login", "Login")
+    EMAIL_VERIFICATION = ("email_verification", "Email Verification")
+    PASSWORD_RESET = ("password_reset", "Password Reset")
+
+
+class OTPTarget(models.TextChoices):
+    EMAIL = ("email", "Email")
+    PHONE = ("phone", "Phone")
+
+
+class AttachmentAssetType(models.TextChoices):
+    IMAGE = ("image", "Image")
+    VIDEO = ("video", "Video")
+    FILE = ("file", "File")
