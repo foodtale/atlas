@@ -36,6 +36,11 @@ class User(BaseModel, AbstractBaseUser):
     onboarded_at = models.DateTimeField(blank=True, null=True)
     verified_at = models.DateTimeField(blank=True, null=True)
 
+    followers_count = models.PositiveIntegerField(default=0)
+    following_count = models.PositiveIntegerField(default=0)
+    food_tales_count = models.PositiveIntegerField(default=0)
+    public_food_tales_count = models.PositiveIntegerField(default=0)
+
     USERNAME_FIELD = "phone_number"
     REQUIRED_FIELDS = ["email_address", "full_name"]
 
@@ -71,7 +76,7 @@ class User(BaseModel, AbstractBaseUser):
     @property
     def is_verified(self):
         return self.verified_at is not None
-    
+
     @property
     def avatar_url(self):
         return self.avatar.url
