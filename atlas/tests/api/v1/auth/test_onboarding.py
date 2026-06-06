@@ -5,7 +5,7 @@ from atlas.models.user import User
 
 @pytest.mark.django_db
 def test_unauthenticated_returns_403(api_client):
-    response = api_client.patch("/api/v1/onboarding/profile", {}, format="json")
+    response = api_client.patch("/api/v1/auth/onboarding", {}, format="json")
 
     assert response.status_code == 403
 
@@ -13,7 +13,7 @@ def test_unauthenticated_returns_403(api_client):
 @pytest.mark.django_db
 def test_updates_full_name(authenticated_client, user):
     response = authenticated_client.patch(
-        "/api/v1/onboarding/profile",
+        "/api/v1/auth/onboarding",
         {"full_name": "Santosh Patro"},
         format="json",
     )
@@ -30,7 +30,7 @@ def test_updates_full_name(authenticated_client, user):
 @pytest.mark.django_db
 def test_updates_full_name_and_email(authenticated_client, user):
     response = authenticated_client.patch(
-        "/api/v1/onboarding/profile",
+        "/api/v1/auth/onboarding",
         {"full_name": "Santosh Patro", "email_address": "santosh@example.com"},
         format="json",
     )
@@ -45,7 +45,7 @@ def test_updates_full_name_and_email(authenticated_client, user):
 @pytest.mark.django_db
 def test_empty_email_stored_as_null(authenticated_client, user):
     response = authenticated_client.patch(
-        "/api/v1/onboarding/profile",
+        "/api/v1/auth/onboarding",
         {"full_name": "Santosh Patro", "email_address": ""},
         format="json",
     )
@@ -59,7 +59,7 @@ def test_empty_email_stored_as_null(authenticated_client, user):
 @pytest.mark.django_db
 def test_missing_full_name_returns_400(authenticated_client):
     response = authenticated_client.patch(
-        "/api/v1/onboarding/profile",
+        "/api/v1/auth/onboarding",
         {},
         format="json",
     )
@@ -70,7 +70,7 @@ def test_missing_full_name_returns_400(authenticated_client):
 @pytest.mark.django_db
 def test_invalid_email_returns_400(authenticated_client):
     response = authenticated_client.patch(
-        "/api/v1/onboarding/profile",
+        "/api/v1/auth/onboarding",
         {"full_name": "Santosh Patro", "email_address": "not-an-email"},
         format="json",
     )

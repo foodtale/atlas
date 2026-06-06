@@ -1,4 +1,5 @@
 from django.conf import settings
+from django.utils.timezone import now
 from rest_framework.viewsets import ViewSet
 from rest_framework import serializers, status
 from rest_framework.decorators import action
@@ -19,6 +20,18 @@ class OTPVerifySerializer(serializers.Serializer):
     phone_number = serializers.CharField()
     otp_request_id = serializers.UUIDField()
     otp = serializers.CharField()
+
+
+class OnboardingSerializer(serializers.Serializer):
+    full_name = serializers.CharField()
+    email_address = serializers.EmailField(
+        required=False,
+        allow_null=True,
+        allow_blank=True,
+    )
+
+    def validate_email_address(self, value):
+        return value or None
 
 
 class LoggedInUserSerializer(serializers.ModelSerializer):
@@ -109,3 +122,28 @@ class AuthViewSet(ViewSet):
         user = request.user
         serializer = LoggedInUserSerializer(user)
         return APIResponse(ok=True, payload=serializer.data, status=status.HTTP_200_OK)
+
+    @action(
+        methods=["PATCH"],
+        detail=False,
+        url_name="onboarding",
+        url_path="onboarding",
+        permission_classes=[IsAuthenticated],
+    )
+    def onboarding(self, request, *args, **kwargs):
+        serializer = OnboardingSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        user = request.user
+        validated_data = serializer.validated_data
+
+        for key, value in validated_data.items():
+            setattr(user, key, value)
+        user.onboarded_at = now()
+        user.save(update_fields=[*validated_data.keys(), "onboarded_at"])
+
+        return APIResponse(
+            ok=True,
+            payload=LoggedInUserSerializer(user).data,
+            status=status.HTTP_200_OK,
+        )

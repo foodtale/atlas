@@ -41,6 +41,10 @@ class FoodTalePhoto(BaseModel):
     class Meta:
         db_table = "food_tale_photos"
 
+    @property
+    def photo_url(self):
+        return self.photo.url
+
 
 class FoodTaleLike(BaseModel):
     food_tale = models.ForeignKey(
