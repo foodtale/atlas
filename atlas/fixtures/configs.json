@@ -1,0 +1,17 @@
+[
+  {
+    "key": "GOOGLE_PLACES_API_KEY",
+    "value": "",
+    "description": "Google Places API key used for outlet search"
+  },
+  {
+    "key": "GOOGLE_PLACES_API_BASE_URL",
+    "value": "https://places.googleapis.com/v1/places:searchText",
+    "description": "Google Places API base URL for text search"
+  },
+  {
+    "key": "GOOGLE_PLACES_DETAIL_BASE_URL",
+    "value": "https://places.googleapis.com/v1/places",
+    "description": "Google Places API base URL for place detail lookup by place_id"
+  }
+]

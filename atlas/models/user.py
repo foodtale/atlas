@@ -4,16 +4,20 @@ from django.contrib.auth.models import BaseUserManager, AbstractBaseUser
 from django.utils.timezone import now
 
 from atlas.models.base import BaseModel
+from atlas.utils import generate_username
 
 
 class UserManager(BaseUserManager):
-    def create_superuser(self, phone_number, email_address, full_name, password):
+    def create_superuser(
+        self, username, phone_number, email_address, full_name, password
+    ):
         user = self.model(
+            username=username,
             phone_number=phone_number,
             email_address=self.normalize_email(email_address),
             full_name=full_name,
-            onboarded_at=now,
-            verified_at=now,
+            onboarded_at=now(),
+            verified_at=now(),
             is_superuser=True,
         )
         user.set_password(password)
@@ -22,6 +26,7 @@ class UserManager(BaseUserManager):
 
 
 class User(BaseModel, AbstractBaseUser):
+    username = models.CharField(max_length=64, unique=True, blank=True)
     phone_number = models.CharField(max_length=32, unique=True)
     email_address = models.EmailField(blank=True, null=True)
     full_name = models.CharField(blank=True, null=True, max_length=256)
@@ -38,16 +43,30 @@ class User(BaseModel, AbstractBaseUser):
 
     followers_count = models.PositiveIntegerField(default=0)
     following_count = models.PositiveIntegerField(default=0)
-    food_tales_count = models.PositiveIntegerField(default=0)
-    public_food_tales_count = models.PositiveIntegerField(default=0)
+    tales_count = models.PositiveIntegerField(default=0)
+    public_tales_count = models.PositiveIntegerField(default=0)
 
-    USERNAME_FIELD = "phone_number"
-    REQUIRED_FIELDS = ["email_address", "full_name"]
+    USERNAME_FIELD = "username"
+    REQUIRED_FIELDS = ["email_address", "full_name", "phone_number"]
 
     objects = UserManager()
 
     class Meta:
         db_table = "users"
+
+    def save(self, *args, **kwargs):
+        if self._state.adding:
+            if not self.username:
+                MAX_ATTEMPTS = 5
+                for _ in range(MAX_ATTEMPTS):
+                    candidate = generate_username()
+                    if not User.objects.filter(username=candidate).exists():
+                        self.username = candidate
+                        break
+                else:
+                    # Fallback if all 5 attempts collide
+                    self.username = f"user_{secrets.token_hex(4)}"
+        return super().save(*args, **kwargs)
 
     def has_perm(self, perm, obj=None):
         "Does the user have a specific permission?"

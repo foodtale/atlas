@@ -11,7 +11,7 @@ class Command(BaseCommand):
     help = "Create missing configs from configs.json"
 
     def handle(self, *args, **options):
-        config_file = Path(settings.BASE_DIR) / "configs.json"
+        config_file = Path(settings.BASE_DIR) / "atlas" / "fixtures" / "configs.json"
 
         with open(config_file) as f:
             configs = json.load(f)

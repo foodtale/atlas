@@ -5,8 +5,9 @@ from atlas.models.otp_request import OTPRequest
 from atlas.models.attachment import Attachment
 from atlas.models.outlet import Outlet
 from atlas.models.dish import Dish
-from atlas.models.food_tale import FoodTale, FoodTalePhoto, FoodTaleLike
+from atlas.models.tale import Tale, TalePhoto, TaleLike
 from atlas.models.follower import Follower
+from atlas.models.config import Config
 
 
 __all__ = [
@@ -21,8 +22,9 @@ __all__ = [
     "Attachment",
     "Outlet",
     "Dish",
-    "FoodTale",
-    "FoodTalePhoto",
-    "FoodTaleLike",
+    "Tale",
+    "TalePhoto",
+    "TaleLike",
     "Follower",
+    "Config",
 ]

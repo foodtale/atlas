@@ -29,6 +29,7 @@ class OnboardingSerializer(serializers.Serializer):
         allow_null=True,
         allow_blank=True,
     )
+    username = serializers.CharField()
 
     def validate_email_address(self, value):
         return value or None
@@ -37,7 +38,17 @@ class OnboardingSerializer(serializers.Serializer):
 class LoggedInUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ["id", "phone_number", "full_name", "email_address", "is_onboarded"]
+        fields = [
+            "id",
+            "phone_number",
+            "full_name",
+            "email_address",
+            "username",
+            "is_onboarded",
+            "tales_count",
+            "followers_count",
+            "following_count",
+        ]
 
 
 class AuthViewSet(ViewSet):
@@ -49,7 +60,6 @@ class AuthViewSet(ViewSet):
         serializer.is_valid(raise_exception=True)
 
         validated_data = serializer.validated_data
-
         user = User.objects.filter(
             phone_number=validated_data.get("phone_number")
         ).first()
@@ -137,8 +147,18 @@ class AuthViewSet(ViewSet):
         user = request.user
         validated_data = serializer.validated_data
 
+        username = validated_data.get("username")
+
+        if User.objects.filter(username=username).exclude(id=user.id).exists():
+            return APIResponse(
+                ok=False,
+                message="Username is already taken.",
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         for key, value in validated_data.items():
             setattr(user, key, value)
+
         user.onboarded_at = now()
         user.save(update_fields=[*validated_data.keys(), "onboarded_at"])
 
@@ -147,3 +167,32 @@ class AuthViewSet(ViewSet):
             payload=LoggedInUserSerializer(user).data,
             status=status.HTTP_200_OK,
         )
+
+    @action(
+        methods=["GET"],
+        detail=False,
+        url_name="session-status",
+        url_path="session/status",
+    )
+    def session_status(self, request, *args, **kwargs):
+        session_token = request.query_params.get("session_token")
+        user_session = (
+            UserSession.objects.filter(
+                session_token=session_token,
+                user__blocked_at__isnull=True,
+                user__verified_at__isnull=False,
+            )
+            .select_related("user")
+            .first()
+        )
+        payload = {"is_logged_in": False, "user": None}
+        if not user_session:
+            return APIResponse(ok=True, payload=payload, status=status.HTTP_200_OK)
+
+        user = user_session.user
+        serializer = LoggedInUserSerializer(user)
+
+        payload["is_logged_in"] = True
+        payload["user"] = serializer.data
+
+        return APIResponse(ok=True, payload=payload, status=status.HTTP_200_OK)

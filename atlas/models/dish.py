@@ -12,7 +12,7 @@ class Dish(BaseModel):
     added_by = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True
     )
-    public_foodtales_count = models.IntegerField(default=0)
+    public_tales_count = models.IntegerField(default=0)
 
     class Meta:
         db_table = "dishes"
@@ -21,3 +21,8 @@ class Dish(BaseModel):
                 fields=["outlet", "name"], name="uniq_name_per_outlet"
             )
         ]
+
+    def save(self, *args, **kwargs):
+        if self._state.adding:
+            self.name = self.name.strip().lower()
+        return super().save(*args, **kwargs)
