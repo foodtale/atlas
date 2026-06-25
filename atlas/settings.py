@@ -10,8 +10,13 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
+import os
 from pathlib import Path
+from dotenv import load_dotenv
 import tomllib
+import dj_database_url
+
+load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -21,13 +26,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-y+f!(p+yas7bjvy&h#y1^$n9+xzw3-k5g7vq+ld&(b!e+aajah"
+SECRET_KEY = os.environ.get("SECRET_KEY", "django-insecure-key")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get("DEBUG", "1") == "1"
 
 ALLOWED_HOSTS = ["*"]
-
 
 # Application definition
 
@@ -44,6 +48,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -76,10 +81,11 @@ WSGI_APPLICATION = "atlas.wsgi.application"
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
 DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
-    }
+    "default": dj_database_url.config(
+        env="DB_URL",
+        conn_max_age=600,
+        engine="django.db.backends.postgresql",
+    )
 }
 
 
@@ -118,6 +124,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = "static/"
+STATIC_ROOT = BASE_DIR / "staticfiles"
 
 AUTH_USER_MODEL = "atlas.User"
 
@@ -133,12 +140,13 @@ ATLAS_VERSION = tomllib.load(open(BASE_DIR / "pyproject.toml", "rb"))["project"]
 ]
 
 # Celery
-CELERY_BROKER_URL = "redis://localhost:6379/0"
-CELERY_RESULT_BACKEND = "redis://localhost:6379/0"
+CELERY_BROKER_URL = os.environ.get("CELERY_BROKER_URL", "redis://localhost:6379/0")
+CELERY_RESULT_BACKEND = os.environ.get(
+    "CELERY_RESULT_BACKEND", "redis://localhost:6379/0"
+)
 
 # Media
-MEDIA_CDN_URL = "http://localhost:8000/media"
-# MEDIA_CDN_URL = "https://cdn.atlas.foodtale.app"
+MEDIA_CDN_URL = os.environ.get("MEDIA_CDN_URL", "http://localhost:8000/media")
 MEDIA_ROOT = BASE_DIR / "media"
 MEDIA_URL = "/media/"
-LOCAL_BASE_URL = "http://localhost:8000/"
+LOCAL_BASE_URL = os.environ.get("LOCAL_BASE_URL", "http://localhost:8000/")
