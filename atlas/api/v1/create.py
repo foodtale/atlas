@@ -3,13 +3,14 @@ from rest_framework.decorators import action
 from rest_framework import serializers, status
 from rest_framework.permissions import IsAuthenticated
 
-from atlas.models.choices import FoodTaleVisibility
+from atlas.models.choices import TaleVisibility
 from atlas.models.dish import Dish
 from atlas.models.outlet import Outlet
 from atlas.models.tale import Tale
 from atlas.response import APIResponse
 from atlas.services.create_tale_service import CreateTaleService
 from atlas.services.outlet_search_service import OutletSearchService
+from atlas.tasks.attachments import optimize_image
 
 
 class OutletSearchSerializer(serializers.Serializer):
@@ -23,7 +24,7 @@ class DishSearchSerializer(serializers.Serializer):
 
 class DishSerializer(serializers.ModelSerializer):
     class Meta:
-        db_table = Dish
+        model = Dish
         fields = [
             "id",
             "name",
@@ -37,9 +38,10 @@ class TaleCreateSerializer(serializers.Serializer):
     story = serializers.CharField(required=False, allow_blank=True, default="")
     would_order_again = serializers.BooleanField(default=True)
     visibility = serializers.ChoiceField(
-        choices=FoodTaleVisibility.choices,
-        default=FoodTaleVisibility.FOLLOWERS,
+        choices=TaleVisibility.choices,
+        default=TaleVisibility.PUBLIC,
     )
+    photo_id = serializers.UUIDField(required=False, allow_null=True, default=None)
 
 
 class TaleSerializer(serializers.ModelSerializer):
@@ -52,7 +54,8 @@ class TaleSerializer(serializers.ModelSerializer):
             "would_order_again",
             "story",
             "visibility",
-            "created_at"
+            "photo_url",
+            "created_at",
         ]
 
 
@@ -129,7 +132,12 @@ class CreateViewSet(ViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        tale_serializer = TaleSerializer(result.get("tale"))
+        tale = result.get("tale")
+
+        if tale.photo_id:
+            optimize_image.delay(str(tale.photo_id))
+
+        tale_serializer = TaleSerializer(tale)
 
         return APIResponse(
             ok=True,

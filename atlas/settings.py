@@ -26,7 +26,7 @@ SECRET_KEY = "django-insecure-y+f!(p+yas7bjvy&h#y1^$n9+xzw3-k5g7vq+ld&(b!e+aajah
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["*"]
 
 
 # Application definition
@@ -137,7 +137,8 @@ CELERY_BROKER_URL = "redis://localhost:6379/0"
 CELERY_RESULT_BACKEND = "redis://localhost:6379/0"
 
 # Media
-MEDIA_CDN_URL = "https://cdn.atlas.foodtale.app"
+MEDIA_CDN_URL = "http://localhost:8000/media"
+# MEDIA_CDN_URL = "https://cdn.atlas.foodtale.app"
 MEDIA_ROOT = BASE_DIR / "media"
 MEDIA_URL = "/media/"
-LOCAL_BASE_URL = "http://localhost:8000"
+LOCAL_BASE_URL = "http://localhost:8000/"

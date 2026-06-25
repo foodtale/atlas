@@ -18,7 +18,6 @@ class AttachmentAssetType(models.TextChoices):
     FILE = ("file", "File")
 
 
-class FoodTaleVisibility(models.TextChoices):
+class TaleVisibility(models.TextChoices):
     PUBLIC = ("public", "Public")
-    FOLLOWERS = ("followers", "Followers")
     PRIVATE = ("private", "Private")

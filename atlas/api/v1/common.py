@@ -51,7 +51,6 @@ class AttachmentViewSet(ViewSet):
 
         return APIResponse(
             ok=True,
-            message="Upload URL generated.",
             status=status.HTTP_201_CREATED,
             payload={
                 "attachment_id": attachment.id,

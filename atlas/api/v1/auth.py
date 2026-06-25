@@ -30,9 +30,13 @@ class OnboardingSerializer(serializers.Serializer):
         allow_blank=True,
     )
     username = serializers.CharField()
+    city = serializers.CharField()
 
     def validate_email_address(self, value):
         return value or None
+    
+    def validate_city(self, value):
+        return value.strip().title()
 
 
 class LoggedInUserSerializer(serializers.ModelSerializer):

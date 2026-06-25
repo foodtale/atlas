@@ -1,8 +1,12 @@
+import logging
+
 from rest_framework import status
 from rest_framework.exceptions import ValidationError
 from rest_framework.views import exception_handler
 
 from atlas.response import APIResponse
+
+logger = logging.getLogger(__name__)
 
 
 def custom_exception_handler(exc, context):
@@ -10,6 +14,11 @@ def custom_exception_handler(exc, context):
 
     # Unexpected exception
     if response is None:
+        logger.exception(
+            "Unhandled exception in %s",
+            context.get("view").__class__.__name__,
+            exc_info=exc,
+        )
         return APIResponse(
             ok=False,
             status=status.HTTP_500_INTERNAL_SERVER_ERROR,

@@ -3,7 +3,8 @@ import logging
 from django.db import transaction
 from django.db.models import F
 
-from atlas.models.choices import FoodTaleVisibility
+from atlas.models.attachment import Attachment
+from atlas.models.choices import TaleVisibility
 from atlas.models.dish import Dish
 from atlas.models.outlet import Outlet
 from atlas.models.tale import Tale
@@ -18,7 +19,8 @@ class CreateTaleService(BaseService):
     Creates a tale end-to-end.
 
     Resolves outlet (DB-first, Google fallback) and dish, then inside a single
-    transaction: creates the tale and increments all denormalised counters.
+    transaction: creates the tale with optional photo, clears the attachment
+    expiry to make it permanent, and increments all denormalised counters.
 
     Usage:
         result, error = CreateTaleService.call(
@@ -28,6 +30,7 @@ class CreateTaleService(BaseService):
             story="Amazing food!",
             would_order_again=True,
             visibility="public",
+            attachment_id="uuid",   # optional
         )
 
         if not error:
@@ -40,12 +43,12 @@ class CreateTaleService(BaseService):
         dish_name = self.context["dish_name"].strip().lower()
         story = self.context.get("story", "")
         would_order_again = self.context.get("would_order_again", True)
-        visibility = self.context.get("visibility", FoodTaleVisibility.FOLLOWERS)
-        is_public = visibility == FoodTaleVisibility.PUBLIC
+        visibility = self.context.get("visibility", TaleVisibility.PUBLIC)
+        attachment_id = self.context.get("photo_id")
+        is_public = visibility == TaleVisibility.PUBLIC
 
-        # Google API call — must happen before the transaction to avoid holding
-        # a DB connection open during a slow external HTTP request.
         place_data = self._fetch_place_if_needed(place_id)
+        attachment = self._resolve_attachment(attachment_id, user)
 
         with transaction.atomic():
             outlet = self._resolve_outlet(place_id, place_data, user)
@@ -58,7 +61,12 @@ class CreateTaleService(BaseService):
                 story=story,
                 would_order_again=would_order_again,
                 visibility=visibility,
+                photo=attachment,
             )
+
+            if attachment:
+                attachment.expires_at = None
+                attachment.save(update_fields=["expires_at"])
 
             self._increment_counters(user, dish, is_public)
 
@@ -75,6 +83,20 @@ class CreateTaleService(BaseService):
             self.fail(message=f"Could not resolve outlet: {error.message}")
 
         return result["place"]
+
+    def _resolve_attachment(self, attachment_id: str | None, user) -> Attachment | None:
+        if not attachment_id:
+            return None
+
+        attachment = Attachment.objects.filter(
+            id=attachment_id,
+            uploaded_by=user,
+        ).first()
+
+        if not attachment:
+            self.fail(message="Photo attachment not found.")
+
+        return attachment
 
     def _resolve_outlet(self, place_id: str, place_data: dict | None, user) -> Outlet:
         if place_data is None:

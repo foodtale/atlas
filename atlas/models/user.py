@@ -34,6 +34,8 @@ class User(BaseModel, AbstractBaseUser):
     avatar = models.ForeignKey(
         "atlas.Attachment", on_delete=models.SET_NULL, null=True, related_name="+"
     )
+    city = models.CharField(max_length=255, blank=True, null=True)
+    feed_type = models.CharField(max_length=64, blank=True, null=True)
 
     blocked_at = models.DateTimeField(blank=True, null=True)
     blocked_reason = models.TextField(blank=True, null=True)
@@ -56,6 +58,9 @@ class User(BaseModel, AbstractBaseUser):
 
     def save(self, *args, **kwargs):
         if self._state.adding:
+            if self.city:
+                self.city = self.city.strip().title()
+
             if not self.username:
                 MAX_ATTEMPTS = 5
                 for _ in range(MAX_ATTEMPTS):

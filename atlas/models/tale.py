@@ -2,7 +2,7 @@ from django.db import models
 from django.conf import settings
 
 from atlas.models.base import BaseModel
-from atlas.models.choices import FoodTaleVisibility
+from atlas.models.choices import TaleVisibility
 
 
 class Tale(BaseModel):
@@ -20,30 +20,28 @@ class Tale(BaseModel):
     liked_tales_count = models.IntegerField(default=0)
     visibility = models.CharField(
         max_length=32,
-        choices=FoodTaleVisibility.choices,
-        default=FoodTaleVisibility.FOLLOWERS,
+        choices=TaleVisibility.choices,
+        default=TaleVisibility.PUBLIC,
     )
+    photo = models.ForeignKey(
+        "atlas.Attachment",
+        on_delete=models.SET_NULL,
+        related_name="attached_tale_photos",
+        null=True,
+        blank=True,
+    )
+    published_at = models.DateTimeField(blank=True, null=True)
 
     class Meta:
         db_table = "tales"
 
-
-class TalePhoto(BaseModel):
-    tale = models.ForeignKey(
-        "atlas.Tale", on_delete=models.CASCADE, related_name="photos"
-    )
-    photo = models.ForeignKey(
-        "atlas.Attachment",
-        on_delete=models.CASCADE,
-        related_name="attached_tale_photos",
-    )
-
-    class Meta:
-        db_table = "tale_photos"
-
     @property
     def photo_url(self):
         return self.photo.url
+
+    @property
+    def is_published(self):
+        return self.published_at is not None
 
 
 class TaleLike(BaseModel):

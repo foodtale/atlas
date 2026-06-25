@@ -13,5 +13,10 @@
     "key": "GOOGLE_PLACES_DETAIL_BASE_URL",
     "value": "https://places.googleapis.com/v1/places",
     "description": "Google Places API base URL for place detail lookup by place_id"
+  },
+  {
+    "key": "DEFAULT_FEED_ALGORITHM",
+    "value": "chronological",
+    "description": "Default feed type for all users. Overridden per-user via user.feed_type."
   }
 ]
