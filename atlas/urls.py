@@ -3,9 +3,10 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import path, include
 
-from atlas.views import health_check, upload_local
+from atlas.views import home, health_check, upload_local
 
 urlpatterns = [
+    path("", home),
     path("admin/", admin.site.urls),
     path("api/v1/", include("atlas.api.v1")),
     path("health", health_check),
